@@ -11,6 +11,7 @@ import { Status, Priority } from "@prisma/client";
 import { toggleTaskStatusAction, deleteTaskAction } from "@/app/actions/tasks";
 import { toast } from "sonner";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 export interface Task {
   id: string;
@@ -42,6 +43,15 @@ export function TaskCard({ task, onEdit, onTaskUpdated }: TaskCardProps) {
       toast.error(res.error);
     } else {
       toast.success(`Task moved to ${newStatus.replace("_", " ")}`);
+      
+      // Broadcast realtime change
+      const supabase = createClient();
+      supabase.channel("live-tasks-channel").send({
+        type: "broadcast",
+        event: "task-changed",
+        payload: { action: "update", id: task.id }
+      });
+
       onTaskUpdated?.();
     }
   };
@@ -56,6 +66,15 @@ export function TaskCard({ task, onEdit, onTaskUpdated }: TaskCardProps) {
       toast.error(res.error);
     } else {
       toast.success("Task deleted");
+      
+      // Broadcast realtime change
+      const supabase = createClient();
+      supabase.channel("live-tasks-channel").send({
+        type: "broadcast",
+        event: "task-changed",
+        payload: { action: "delete", id: task.id }
+      });
+
       onTaskUpdated?.();
     }
   };

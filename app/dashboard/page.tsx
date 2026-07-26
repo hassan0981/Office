@@ -51,6 +51,14 @@ export default function DashboardPage() {
           fetchTasks();
         }
       )
+      .on(
+        "broadcast",
+        { event: "task-changed" },
+        (payload) => {
+          console.log("Realtime Task broadcast received:", payload);
+          fetchTasks();
+        }
+      )
       .subscribe((status) => {
         console.log("Realtime Task channel status:", status);
       });

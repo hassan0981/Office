@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { createTaskAction, updateTaskAction } from "@/app/actions/tasks";
 import { toast } from "sonner";
 import { Task } from "./task-card";
+import { createClient } from "@/lib/supabase/client";
 
 interface TaskFormDialogProps {
   isOpen: boolean;
@@ -65,6 +66,7 @@ export function TaskFormDialog({
   const onSubmit = async (data: TaskFormValues) => {
     setIsSubmitting(true);
     try {
+      const supabase = createClient();
       if (taskToEdit) {
         const res = await updateTaskAction(taskToEdit.id, data);
         if (res?.error) {
@@ -72,6 +74,14 @@ export function TaskFormDialog({
         } else {
           toast.success("Task updated successfully!");
           onSuccess?.();
+          
+          // Broadcast realtime change
+          supabase.channel("live-tasks-channel").send({
+            type: "broadcast",
+            event: "task-changed",
+            payload: { action: "update", id: taskToEdit.id }
+          });
+
           onClose();
         }
       } else {
@@ -81,6 +91,14 @@ export function TaskFormDialog({
         } else {
           toast.success("New task created!");
           onSuccess?.();
+
+          // Broadcast realtime change
+          supabase.channel("live-tasks-channel").send({
+            type: "broadcast",
+            event: "task-changed",
+            payload: { action: "create" }
+          });
+
           onClose();
         }
       }
