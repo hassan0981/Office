@@ -10,6 +10,7 @@ import { TaskFilters } from "@/components/tasks/task-filters";
 import { TaskStats } from "@/components/tasks/task-stats";
 import { getTasksAction } from "@/app/actions/tasks";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,8 +32,29 @@ export default function DashboardPage() {
     setIsLoading(false);
   }, [statusFilter, priorityFilter, sortBy]);
 
+  // Subscribe to real-time Task updates
   useEffect(() => {
     fetchTasks();
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("live-tasks-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Task",
+        },
+        () => {
+          fetchTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchTasks]);
 
   const handleOpenCreate = () => {

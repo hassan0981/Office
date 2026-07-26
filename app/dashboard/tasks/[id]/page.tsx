@@ -16,6 +16,7 @@ import { getTaskByIdAction, deleteTaskAction, toggleTaskStatusAction } from "@/a
 import { Status, Priority } from "@prisma/client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -41,9 +42,36 @@ export default function TaskDetailPage() {
     setIsLoading(false);
   }, [taskId, router]);
 
+  // Subscribe to real-time updates for this specific Task
   useEffect(() => {
     fetchTask();
-  }, [fetchTask]);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`task-detail-${taskId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Task",
+          filter: `id=eq.${taskId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            toast.info("This task was deleted by another session.");
+            router.push("/dashboard");
+          } else {
+            fetchTask();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [taskId, fetchTask, router]);
 
   const handleStatusToggle = async (newStatus: Status) => {
     if (!task) return;
