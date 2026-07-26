@@ -4,13 +4,14 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TaskFlow — Intelligent Task Management System",
+  title: "TaskFlow — Intelligent Task & Project Management Workspace",
   description:
-    "Organize, prioritize, and track your daily tasks effortlessly with TaskFlow's production-ready full-stack task manager.",
+    "Organize, prioritize, and track your daily tasks effortlessly with TaskFlow's executive-grade task manager.",
 };
 
 export default async function RootLayout({
@@ -28,6 +29,7 @@ export default async function RootLayout({
       <body className={`${inter.className} flex min-h-full flex-col font-sans antialiased selection:bg-terracotta-200 selection:text-terracotta-900`}>
         <Navbar user={user} />
         <main className="flex-1">{children}</main>
+        <Footer />
         <Toaster
           position="top-right"
           toastOptions={{
