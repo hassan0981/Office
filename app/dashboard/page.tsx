@@ -46,11 +46,14 @@ export default function DashboardPage() {
           schema: "public",
           table: "Task",
         },
-        () => {
+        (payload) => {
+          console.log("Realtime Task change event received:", payload);
           fetchTasks();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime Task channel status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

@@ -58,6 +58,7 @@ export default function TaskDetailPage() {
           filter: `id=eq.${taskId}`,
         },
         (payload) => {
+          console.log("Realtime Task detail event received:", payload);
           if (payload.eventType === "DELETE") {
             toast.info("This task was deleted by another session.");
             router.push("/dashboard");
@@ -66,7 +67,9 @@ export default function TaskDetailPage() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime Task detail channel status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
