@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CheckSquare, LogOut, LayoutDashboard, User } from "lucide-react";
+import { CheckSquare, LogOut, LayoutDashboard, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions/auth";
 import { toast } from "sonner";
@@ -70,6 +70,17 @@ export function Navbar({ user }: NavbarProps) {
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   <span className="hidden sm:inline">Dashboard</span>
+                </Button>
+              </Link>
+
+              <Link href="/dashboard/settings">
+                <Button
+                  variant={pathname === "/dashboard/settings" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2 font-medium"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Settings</span>
                 </Button>
               </Link>
 

@@ -9,11 +9,23 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   name      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
   tasks     Task[]
+  apiTokens ApiToken[]
+}
+
+model ApiToken {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  label      String?   // e.g. "FocusFlow Extension"
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
 }
 
 model Task {
