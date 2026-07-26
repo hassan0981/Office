@@ -48,15 +48,21 @@ export async function signupAction(data: SignupFormValues) {
 
   if (authData.user) {
     try {
-      await prisma.user.upsert({
-        where: { id: authData.user.id },
-        update: { email: parsed.data.email, name: parsed.data.name },
-        create: {
-          id: authData.user.id,
-          email: parsed.data.email,
-          name: parsed.data.name,
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ id: authData.user.id }, { email: parsed.data.email }],
         },
       });
+
+      if (!existingUser) {
+        await prisma.user.create({
+          data: {
+            id: authData.user.id,
+            email: parsed.data.email,
+            name: parsed.data.name,
+          },
+        });
+      }
     } catch (e) {
       console.warn("Prisma user synchronization notice:", e);
     }

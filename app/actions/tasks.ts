@@ -88,16 +88,29 @@ export async function createTaskAction(data: TaskFormValues) {
   }
 
   try {
-    // Ensure User entry exists in DB
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {},
-      create: {
-        id: user.id,
-        email: user.email || `${user.id}@example.com`,
-        name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-      },
-    });
+    // Ensure User entry exists in DB safely without throwing unique email constraint error
+    const userEmail = user.email || `${user.id}@example.com`;
+    const userName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+
+    try {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [{ id: user.id }, { email: userEmail }],
+        },
+      });
+
+      if (!existingUser) {
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: userEmail,
+            name: userName,
+          },
+        });
+      }
+    } catch (userSyncErr) {
+      console.warn("User synchronization notice:", userSyncErr);
+    }
 
     const task = await prisma.task.create({
       data: {

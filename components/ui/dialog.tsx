@@ -40,31 +40,31 @@ export function Dialog({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          {/* Backdrop */}
+          {/* Soft Warm Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-charcoal-900/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-charcoal-900/30 backdrop-blur-sm"
           />
 
-          {/* Modal Container */}
+          {/* Modal Box Styled to Warm Beige Palette */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
             className={cn(
-              "relative z-50 w-full max-w-lg rounded-2xl border border-cream-300 bg-white/95 p-6 shadow-warm-lg backdrop-blur-md dark:bg-charcoal-800",
+              "relative z-50 w-full max-w-lg rounded-3xl border border-cream-300 bg-white/95 p-6 sm:p-8 shadow-warm-lg backdrop-blur-md",
               className
             )}
           >
-            <div className="flex items-center justify-between border-b border-cream-200 pb-4">
+            <div className="flex items-start justify-between border-b border-cream-200 pb-4">
               <div>
-                <h2 className="text-xl font-bold text-charcoal-900">{title}</h2>
+                <h2 className="text-xl font-bold tracking-tight text-charcoal-900">{title}</h2>
                 {description && (
-                  <p className="mt-1 text-sm text-charcoal-400">{description}</p>
+                  <p className="mt-1 text-xs text-charcoal-500">{description}</p>
                 )}
               </div>
               <button
@@ -75,7 +75,7 @@ export function Dialog({
                 <span className="sr-only">Close</span>
               </button>
             </div>
-            <div className="mt-5">{children}</div>
+            <div className="mt-6">{children}</div>
           </motion.div>
         </div>
       )}
