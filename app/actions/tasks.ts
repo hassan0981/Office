@@ -230,3 +230,68 @@ export async function deleteTaskAction(taskId: string) {
     return { error: e.message || "Failed to delete task" };
   }
 }
+
+export async function saveTaskSketchAction(taskId: string, sketch: string | null) {
+  const user = await getAuthUser();
+  if (!user) {
+    return { error: "Unauthenticated" };
+  }
+
+  try {
+    const existing = await prisma.task.findFirst({
+      where: { id: taskId, userId: user.id },
+    });
+
+    if (!existing) {
+      return { error: "Task not found" };
+    }
+
+    const task = await prisma.task.update({
+      where: { id: taskId },
+      data: { sketch },
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/tasks/${taskId}`);
+    return { success: true, task };
+  } catch (e: any) {
+    return { error: e.message || "Failed to save sketch" };
+  }
+}
+
+export async function saveTaskSignatureAction(
+  taskId: string,
+  signature: string | null,
+  status?: Status
+) {
+  const user = await getAuthUser();
+  if (!user) {
+    return { error: "Unauthenticated" };
+  }
+
+  try {
+    const existing = await prisma.task.findFirst({
+      where: { id: taskId, userId: user.id },
+    });
+
+    if (!existing) {
+      return { error: "Task not found" };
+    }
+
+    const updateData: any = { signature };
+    if (status) {
+      updateData.status = status;
+    }
+
+    const task = await prisma.task.update({
+      where: { id: taskId },
+      data: updateData,
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/tasks/${taskId}`);
+    return { success: true, task };
+  } catch (e: any) {
+    return { error: e.message || "Failed to save signature" };
+  }
+}

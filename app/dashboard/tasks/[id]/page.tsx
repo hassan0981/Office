@@ -17,6 +17,8 @@ import { Status, Priority } from "@prisma/client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { WhiteboardCanvas } from "@/components/tasks/whiteboard-canvas";
+import { SignatureModal } from "@/components/tasks/signature-modal";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -27,6 +29,7 @@ export default function TaskDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchTask = useCallback(async () => {
@@ -78,6 +81,12 @@ export default function TaskDetailPage() {
 
   const handleStatusToggle = async (newStatus: Status) => {
     if (!task) return;
+    
+    if (newStatus === "DONE" && !task.signature) {
+      setIsSignatureOpen(true);
+      return;
+    }
+
     const res = await toggleTaskStatusAction(task.id, newStatus);
     if (res?.error) {
       toast.error(res.error);
@@ -180,6 +189,25 @@ export default function TaskDetailPage() {
           </select>
         </div>
 
+        {/* Verified Signature Sign-off Display */}
+        {task.signature && (
+          <div className="mt-6 p-5 border border-cream-200 bg-cream-50/50 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-charcoal-400">
+                Verified Sign-off Signature
+              </span>
+              <p className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                ✓ Sign-off Complete
+              </p>
+            </div>
+            <img
+              src={task.signature}
+              alt="Verified Signature"
+              className="h-16 object-contain bg-white rounded-xl border border-cream-200 p-2 shadow-inner"
+            />
+          </div>
+        )}
+
         {/* Metadata Footer */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-charcoal-500 pt-4 border-t border-cream-200">
           <div className="flex items-center gap-2">
@@ -192,6 +220,9 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Interactive Whiteboard Canvas */}
+      <WhiteboardCanvas taskId={task.id} initialSketch={task.sketch} />
 
       {/* Edit Form Dialog */}
       <TaskFormDialog
@@ -217,6 +248,15 @@ export default function TaskDetailPage() {
           </Button>
         </div>
       </Dialog>
+
+      {/* Signature Completion Modal */}
+      <SignatureModal
+        isOpen={isSignatureOpen}
+        onClose={() => setIsSignatureOpen(false)}
+        taskId={task.id}
+        taskTitle={task.title}
+        onSuccess={fetchTask}
+      />
     </div>
   );
 }

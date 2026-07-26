@@ -12,6 +12,7 @@ import { toggleTaskStatusAction, deleteTaskAction } from "@/app/actions/tasks";
 import { toast } from "sonner";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { SignatureModal } from "@/components/tasks/signature-modal";
 
 export interface Task {
   id: string;
@@ -20,6 +21,8 @@ export interface Task {
   status: Status;
   priority: Priority;
   dueDate?: string | Date | null;
+  sketch?: string | null;
+  signature?: string | null;
   createdAt: string | Date;
 }
 
@@ -32,9 +35,15 @@ interface TaskCardProps {
 export function TaskCard({ task, onEdit, onTaskUpdated }: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const handleStatusToggle = async (newStatus: Status) => {
+    if (newStatus === "DONE" && !task.signature) {
+      setIsSignatureOpen(true);
+      return;
+    }
+
     setIsUpdatingStatus(true);
     const res = await toggleTaskStatusAction(task.id, newStatus);
     setIsUpdatingStatus(false);
@@ -229,6 +238,15 @@ export function TaskCard({ task, onEdit, onTaskUpdated }: TaskCardProps) {
           </Button>
         </div>
       </Dialog>
+
+      {/* Signature Completion Modal */}
+      <SignatureModal
+        isOpen={isSignatureOpen}
+        onClose={() => setIsSignatureOpen(false)}
+        taskId={task.id}
+        taskTitle={task.title}
+        onSuccess={onTaskUpdated}
+      />
     </>
   );
 }
