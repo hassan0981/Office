@@ -32,21 +32,22 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Get styling dimensions
+    // Set styling dimensions first
+    canvas.style.width = "100%";
+    canvas.style.height = "400px";
+
+    // Set high-res internal buffer
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * 2;
     canvas.height = 400 * 2;
-    canvas.style.width = "100%";
-    canvas.style.height = "400px";
 
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    context.scale(2, 2);
     context.lineCap = "round";
     context.lineJoin = "round";
     context.strokeStyle = color;
-    context.lineWidth = brushSize;
+    context.lineWidth = brushSize * 2; // scale brush size to 2x buffer
     contextRef.current = context;
 
     // Fill with a clean off-white background
@@ -57,7 +58,7 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
     if (initialSketch) {
       const img = new Image();
       img.onload = () => {
-        context.drawImage(img, 0, 0, rect.width, 400);
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
       };
       img.src = initialSketch;
     }
@@ -67,7 +68,7 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
   useEffect(() => {
     if (contextRef.current) {
       contextRef.current.strokeStyle = isEraser ? "#FDFBF7" : color;
-      contextRef.current.lineWidth = brushSize;
+      contextRef.current.lineWidth = brushSize * 2; // scale brush size to 2x buffer
     }
   }, [color, brushSize, isEraser]);
 
@@ -88,8 +89,10 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     contextRef.current.beginPath();
     contextRef.current.moveTo(x, y);
@@ -98,9 +101,10 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    if (!isDrawing || !contextRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!isDrawing || !contextRef.current || !canvas) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
 
     if ("touches" in e) {
@@ -111,8 +115,10 @@ export function WhiteboardCanvas({ taskId, initialSketch }: WhiteboardCanvasProp
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     contextRef.current.lineTo(x, y);
     contextRef.current.stroke();

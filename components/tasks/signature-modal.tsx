@@ -36,20 +36,22 @@ export function SignatureModal({
       const canvas = canvasRef.current;
       if (!canvas) return;
 
+      // Set styling dimensions first
+      canvas.style.width = "100%";
+      canvas.style.height = "180px";
+
+      // Set high-res internal buffer
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2;
       canvas.height = 180 * 2;
-      canvas.style.width = "100%";
-      canvas.style.height = "180px";
 
       const context = canvas.getContext("2d");
       if (!context) return;
 
-      context.scale(2, 2);
       context.lineCap = "round";
       context.lineJoin = "round";
       context.strokeStyle = "#1A1613"; // dark charcoal
-      context.lineWidth = 3;
+      context.lineWidth = 6; // appropriate thickness for 2x buffer
       contextRef.current = context;
 
       // Fill signature space with clean solid white
@@ -76,8 +78,10 @@ export function SignatureModal({
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     contextRef.current.beginPath();
     contextRef.current.moveTo(x, y);
@@ -86,9 +90,10 @@ export function SignatureModal({
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    if (!isDrawing || !contextRef.current || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!isDrawing || !contextRef.current || !canvas) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
 
     if ("touches" in e) {
@@ -99,8 +104,10 @@ export function SignatureModal({
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     contextRef.current.lineTo(x, y);
     contextRef.current.stroke();
