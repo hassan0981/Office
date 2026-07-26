@@ -48,13 +48,21 @@ export async function signupAction(data: SignupFormValues) {
 
   if (authData.user) {
     try {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [{ id: authData.user.id }, { email: parsed.data.email }],
-        },
+      const existingById = await prisma.user.findUnique({
+        where: { id: authData.user.id },
       });
 
-      if (!existingUser) {
+      if (!existingById) {
+        const existingByEmail = await prisma.user.findUnique({
+          where: { email: parsed.data.email },
+        });
+
+        if (existingByEmail) {
+          await prisma.user.delete({
+            where: { id: existingByEmail.id },
+          });
+        }
+
         await prisma.user.create({
           data: {
             id: authData.user.id,

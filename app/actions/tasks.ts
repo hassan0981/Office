@@ -88,18 +88,26 @@ export async function createTaskAction(data: TaskFormValues) {
   }
 
   try {
-    // Ensure User entry exists in DB safely without throwing unique email constraint error
+    // Ensure User entry exists in DB safely without throwing unique email constraint or foreign key errors
     const userEmail = user.email || `${user.id}@example.com`;
     const userName = user.user_metadata?.full_name || user.user_metadata?.name || null;
 
     try {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [{ id: user.id }, { email: userEmail }],
-        },
+      const existingById = await prisma.user.findUnique({
+        where: { id: user.id },
       });
 
-      if (!existingUser) {
+      if (!existingById) {
+        const existingByEmail = await prisma.user.findUnique({
+          where: { email: userEmail },
+        });
+
+        if (existingByEmail) {
+          await prisma.user.delete({
+            where: { id: existingByEmail.id },
+          });
+        }
+
         await prisma.user.create({
           data: {
             id: user.id,
